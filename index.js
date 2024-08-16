@@ -28,7 +28,7 @@ async function run() {
     await client.connect();
     // Send a ping to confirm a successful connection
     const carCollection=client.db('carsDB').collection('cars')
-
+    const userCollection=client.db('carUsersDB').collection('users')
     app.get(`/addcar`, async(req, res)=>{
       const cursor=carCollection.find();
       const result=await cursor.toArray();
@@ -76,6 +76,46 @@ async function run() {
       const query={_id : new ObjectId(id)};
       const result=await carCollection.deleteOne(query);
       res.send(result);
+    })
+
+    app.get(`/users`,async(req, res)=>{
+      const cursor=userCollection.find();
+      const result=await cursor.toArray();
+      res.send(result);
+    })
+
+    app.post(`/user`, async(req, res)=>{
+      const newUser=req.body;
+      console.log(newUser);
+      const result=await userCollection.insertOne(newUser);
+      res.send(result)
+    })
+
+    app.put(`/user/:id`,async(req, res)=>{
+      const id=req.params.id;
+      const filter={_id : new ObjectId(id)};
+      const option={upsert:true};
+      const givenId=req.body
+      const cart={
+        $addToSet:{
+          carId:{carId: givenId}
+        }
+      }
+      try{
+        const user=await userCollection.findOne(filter);
+        if (!user.carId || !Array.isArray(user.carId)) {
+          await userCollection.updateOne(filter, {$set:{carId:[]}});
+        }
+        const result=await userCollection.updateOne(filter,cart,option)
+        res.send(result);
+
+      }
+      catch(err){
+        console.log(err)
+      }
+      //const result=await userCollection.updateOne(filter,cart,option)
+     // res.send(result);
+      //console.log(id, req.body);
     })
 
     await client.db("admin").command({ ping: 1 });
