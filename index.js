@@ -1,5 +1,5 @@
 const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors=require('cors')
 require('dotenv').config()
 
@@ -35,13 +35,35 @@ async function run() {
       res.send(result);
     })
 
-    // app.get(`/addcar/:seller`,async(req, res)=>{
-    //   const seller=req.params.seller;
-    //   console.log(seller)
-    //   // const query={addedBy: `${seller}`};
-    //   const result=await carCollection.find({addedBy:`${seller}`});
-    //   res.send(result);
-    // })
+    app.get(`/car/:id`,async(req, res)=>{
+      const id=req.params.id;
+      console.log(id)
+      const query={_id: new ObjectId(id)};
+      const result=await carCollection.findOne(query)
+      res.send(result);
+    })
+    
+    app.put(`/car/:id`,async(req, res)=>{
+      const id=req.params.id;
+      const filter={_id:new ObjectId(id)};
+      const options={upsert:true};
+      const updatedCar=req.body;
+      const car={
+        $set:{
+          name: updatedCar.name,
+          brand: updatedCar.brand,
+          price: updatedCar.price,
+          details: updatedCar.details,
+          photo: updatedCar.photo,
+          seat: updatedCar.seat,
+          brandNew: updatedCar.brandNew,
+          bankLoan: updatedCar.bankLoan,
+        }
+      }
+      const result=await carCollection.updateOne(filter,car ,options)
+      res.send(result);
+    })
+
     app.post(`/addcar`, async(req, res)=>{
       const newCar=req.body;
       console.log(newCar);
@@ -49,7 +71,12 @@ async function run() {
       res.send(result);
     })
 
-
+    app.delete(`/car/:id`, async(req, res)=>{
+      const id=req.params.id;
+      const query={_id : new ObjectId(id)};
+      const result=await carCollection.deleteOne(query);
+      res.send(result);
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
