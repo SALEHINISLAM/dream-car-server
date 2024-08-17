@@ -84,6 +84,13 @@ async function run() {
       res.send(result);
     })
 
+    app.get(`/users/:id`, async(req, res)=>{
+      const id=req.params.id;
+      const query={_id: new ObjectId(id)};
+      const result=await userCollection.findOne(query)
+      res.send(result)
+    })
+    
     app.post(`/user`, async(req, res)=>{
       const newUser=req.body;
       console.log(newUser);
@@ -116,6 +123,29 @@ async function run() {
       //const result=await userCollection.updateOne(filter,cart,option)
      // res.send(result);
       //console.log(id, req.body);
+    })
+
+    app.delete(`/user/:userId/car/:carId`, async(req, res)=>{
+      const userId=req.params.userId;
+      const carId=req.params.carId;
+
+      const filter={_id: new ObjectId(userId)};
+      const update={
+        $pull:{
+          carId: 
+          {carId: 
+            {
+            carId: carId
+          }}
+        }
+      };
+      try{
+        const result=await userCollection.updateOne(filter, update);
+        res.send(result)
+      }catch(err){
+        console.log(err)
+        res.send(err)
+      }
     })
 
     await client.db("admin").command({ ping: 1 });
